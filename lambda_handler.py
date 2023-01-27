@@ -51,10 +51,53 @@ class VerkadaDB():
         
         return unique_indices
 
-    def getRows(self, tableName, matchingCriteria):
-        # Assuming matching criteria is like: {"name": "Jack", "age": 28}
-        unique_indices = self.__getMatchingRowIndices(tableName, matchingCriteria)
+    def __getMatchingRowIndicesComparators(self, tableName, matchingCriteria):
+        indices_of_potential_matches = []
+
+        for criteria_key, critera_value in matchingCriteria.items():
+            if criteria_key in self._data[tableName]:
+                column_values = self._data[tableName][criteria_key]
+                for k, v in column_values.items():
+                    if criteria_key == "age":
+                        parts = critera_value.split()
+                        if len(parts) == 2:
+                            if parts[0] == "EQ":
+                                if v == int(parts[1]):
+                                    indices_of_potential_matches.append(k)
+                            elif parts[0] == "GT":
+                                if v > int(parts[1]):
+                                    indices_of_potential_matches.append(k)
+                            elif parts[0] == "LT":
+                                if v < int(parts[1]):
+                                    indices_of_potential_matches.append(k)
+                            else:
+                                print("Check comparison operator, only LT, GT and EQ allowed.")
+                        elif len(parts) == 4:
+                            if parts[0] == "LT" and parts[2] == "GT":
+                                if v < int(parts[1]) and v > int(parts[3]):
+                                    indices_of_potential_matches.append(k)
+                            elif parts[0] == "GT" and parts[2] == "LT":
+                                if v > int(parts[1]) and v < int(parts[3]):
+                                    indices_of_potential_matches.append(k)
+                            else:
+                                print("Check comparison operator, only LT and GT allowed.")
+                        else:
+                            print("Comparison criteria must be in the form 'LT/GT/EQ 30' or 'GT/LT 20 LT/GT 40'.")
+                    else:
+                        if critera_value == v:
+                            indices_of_potential_matches.append(k)
+
+        # For a row to match all criteria it needs to appear N times in
+        # indices_of_potential_matches where N is len(matchingCriteria)
+        unique_indices = list(set(filter(lambda x: indices_of_potential_matches.count(x) == len(matchingCriteria),
+                                         indices_of_potential_matches)))
         
+        return unique_indices
+
+    # r3 = dbInstance.getRows("leads", {"age": "GT 30 LT 60"})
+    def getRows(self, tableName, matchingCriteria):
+        unique_indices = self.__getMatchingRowIndicesComparators(tableName, matchingCriteria)
+
         rows = []
         # Find resulting rows and add them to result
         for idx in unique_indices:
@@ -157,29 +200,37 @@ dbInstance.addTable("leads")
 lambda_handler(json.dumps({"email":"John@acompany.com"}))
 lambda_handler(json.dumps({"email":"Willy@bcompany.org"}))
 lambda_handler(json.dumps({"email":"Kyle@ccompany.com"}))
-lambda_handler(json.dumps({"email":"Georgie@dcompany.net"}))
-lambda_handler(json.dumps({"email":"Karen@eschool.edu"}))
-lambda_handler(json.dumps({"email":"Annie@usa.gov"}))
-lambda_handler(json.dumps({"email":"Elvira@fcompay.org"}))
-lambda_handler(json.dumps({"email":"Juan@gschool.edu"}))
-lambda_handler(json.dumps({"email":"Julie@hcompany.com"}))
-lambda_handler(json.dumps({"email":"Pierre@ischool.edu"}))
-lambda_handler(json.dumps({"email":"Ellen@canada.gov"}))
-lambda_handler(json.dumps({"email":"Craig@jcompany.org"}))
-lambda_handler(json.dumps({"email":"Juan@kcompany.net"}))
-lambda_handler(json.dumps({"email":"Jack@verkada.com"}))
-lambda_handler(json.dumps({"email":"Jason@verkada.com"}))
-lambda_handler(json.dumps({"email":"Billy@verkada.com"}))
-lambda_handler(json.dumps({"email":"Brent@verkada.com"}))
+# lambda_handler(json.dumps({"email":"Georgie@dcompany.net"}))
+# lambda_handler(json.dumps({"email":"Karen@eschool.edu"}))
+# lambda_handler(json.dumps({"email":"Annie@usa.gov"}))
+# lambda_handler(json.dumps({"email":"Elvira@fcompay.org"}))
+# lambda_handler(json.dumps({"email":"Juan@gschool.edu"}))
+# lambda_handler(json.dumps({"email":"Julie@hcompany.com"}))
+# lambda_handler(json.dumps({"email":"Pierre@ischool.edu"}))
+# lambda_handler(json.dumps({"email":"Ellen@canada.gov"}))
+# lambda_handler(json.dumps({"email":"Craig@jcompany.org"}))
+# lambda_handler(json.dumps({"email":"Juan@kcompany.net"}))
+# lambda_handler(json.dumps({"email":"Jack@verkada.com"}))
+# lambda_handler(json.dumps({"email":"Jason@verkada.com"}))
+# lambda_handler(json.dumps({"email":"Billy@verkada.com"}))
+# lambda_handler(json.dumps({"email":"Brent@verkada.com"}))
 
 ## Put code for Part 2 here
+
+# Update rows for Kyles
+dbInstance.updateRows("leads", {"name": "Kyle"}, {"age": 26, "nationality": "BA"})
+
+# Delete rows for Craigs
+dbInstance.deleteRows("leads", {"name": "Craig"})
 
 # Get rows
 rows = dbInstance.getRows("leads", {"gender": "female", "topLevelName": "gov"})
 print(rows)
-
-# Update rows for Kyles
-dbInstance.updateRows("leads", {"name": "Kyle"}, {"age": "26", "nationality": "BA"})
-
-# Delete rows for Craigs
-dbInstance.deleteRows("leads", {"name": "Craig"})
+print("HERE")
+# Get rows with comparison operators
+r1 = dbInstance.getRows("leads", {"age": "GT 30"})
+print(r1)
+r2 = dbInstance.getRows("leads", {"age": "LT 60"})
+print(r2)
+r3 = dbInstance.getRows("leads", {"age": "GT 30 LT 70"})
+print(r3)
