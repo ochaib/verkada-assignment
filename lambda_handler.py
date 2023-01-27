@@ -11,21 +11,29 @@ class VerkadaDB():
     def __init__(self):
         self._data = {}
 	      ## You may add to the class definition below this line
+        self.entry_count = {}
         
 ## To-do: add class methods
     def addTable(self, tableName):
         if tableName in self._data:
-            return "Table already exists."
-        else:
-            self._data[tableName] = {}
+            return "Table already exists in the database."
+        self._data[tableName] = {}
+        self.entry_count[tableName] = 0
         
     def addRow(self, tableName, rowData):
-        # What is row data? Example of what it looks like?
-        if rowData in self._data[tableName]:
-            return "Row already exists."
-        else:
-            self._data[tableName] = rowData
-    
+        # Since first name and company is not enough to distinguish.
+        # if rowData['email'] in self._data[tableName]['email'].values():
+            # return "Row already exists in the table."
+
+        for k, v in rowData.items():
+            # If key exists in table
+            if k not in self._data[tableName]:
+                self._data[tableName][k] = {}
+            self._data[tableName][k][self.entry_count[tableName]] = v
+
+        print(self._data)
+        self.entry_count[tableName] += 1
+
     def getRows(self, tableName, matchingCriteria):
         # What is matching criteria?
         self._data[tableName]
@@ -38,8 +46,6 @@ class VerkadaDB():
 
 ## Do not edit   
 dbInstance = VerkadaDB()
-
-dbInstance.addTable("Leads")
 
 ## To-do: Implement Function (mimics AWS Lambda handler)
 ## Input: JSON String which mimics AWS Lambda input
@@ -59,21 +65,17 @@ def lambda_handler(json_input):
     agify_response = requests.get(agify_url)
     agify_json = agify_response.json()
     age = agify_json["age"]
-    print(agify_json)
 
     genderize_url = "https://api.genderize.io?name=" + first_name
     genderize_response = requests.get(genderize_url)
     genderize_json = genderize_response.json()
     gender = genderize_json["gender"]
-    print(genderize_json)
 
     nationalize_url = "https://api.nationalize.io?name=" + first_name
     nationalize_response = requests.get(nationalize_url)
     nationalize_json = nationalize_response.json()
     countries = nationalize_json["country"]
     nationality = max(countries, key=lambda x: x['probability'])['country_id'] if countries else None
-    print(nationalize_json)
-    print(nationality)
 
     results = {
         "name": first_name,
@@ -85,16 +87,22 @@ def lambda_handler(json_input):
         "nationality": nationality,
     }
 
-    dbInstance.addRow("Leads", results)
-
     print(results)
 
+    dbInstance.addRow("leads", results)
+
+    headers =  {"Content-Type":"application/json"}
     json_output = json.dumps(results)
+    api_url = "https://rwph529xx9.execute-api.us-west-1.amazonaws.com/prod/pushToSlack"
+    push_response = requests.post(api_url, data=json_output, headers=headers)
+    print(push_response.json())
+    print(push_response.status_code)
+
     ## Output: JSON String which mimics AWS Lambda Output
     return json_output
 
 ## To Do: Create a table to hold the information you process
-
+dbInstance.addTable("leads")
 
 ## Do not edit
 lambda_handler(json.dumps({"email":"John@acompany.com"}))
