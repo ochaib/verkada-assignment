@@ -35,9 +35,45 @@ class VerkadaDB():
         self.entry_count[tableName] += 1
 
     def getRows(self, tableName, matchingCriteria):
-        # What is matching criteria?
-        self._data[tableName]
+        # Assuming matching criteria is like: {"name": "Jack", "age": 28}
+        
+        # {'leads': 
+        #   {'name': {0: 'John', 1: 'Willy'},
+        #    'email': {0: 'John@acompany.com', 1: 'Willy@bcompany.org'},
+        #    'domain': {0: 'acompany', 1: 'bcompany'},
+        #    'topLevelName': {0: 'com', 1: 'org'},
+        #    'age': {0: 72, 1: 69},
+        #    'gender': {0: 'male', 1: 'male'},
+        #    'nationality': {0: 'IE', 1: 'BE'}
+        #   }
+        # }
+        indices_of_potential_matches = []
+
+        for criteria_key, critera_value in matchingCriteria.items():
+            if criteria_key in self._data[tableName]:
+                column_values = self._data[tableName][criteria_key]
+                for k, v in column_values.items():
+                    if critera_value == v:
+                        indices_of_potential_matches.append(k)
+
+        # For a row to match all criteria it needs to appear N times in
+        # indices_of_potential_matches where N is len(matchingCriteria)
+        unique_indices = list(set(filter(lambda x: indices_of_potential_matches.count(x) == len(matchingCriteria),
+                                         indices_of_potential_matches)))
+        
+        rows = []
+        # Find resulting rows and add them to result
+        for idx in unique_indices:
+            row = {}
+            for k, v in self._data[tableName].items():
+                for k1, v1 in v.items():
+                    if k1 == idx:
+                        row[k] = v1
+            rows.append(row)
+
+        return rows
     
+    # dbInstance.updateRows("leads", {"name": "Kyle"}, {"age": "26", "nationality": "BA"})
     def updateRows(self, tableName, matchingCriteria, updateInformation):
         pass
     
@@ -89,14 +125,15 @@ def lambda_handler(json_input):
 
     print(results)
 
-    dbInstance.addRow("leads", results)
+    if domain != "verkada":
+        dbInstance.addRow("leads", results)
 
     headers =  {"Content-Type":"application/json"}
     json_output = json.dumps(results)
     api_url = "https://rwph529xx9.execute-api.us-west-1.amazonaws.com/prod/pushToSlack"
-    push_response = requests.post(api_url, data=json_output, headers=headers)
-    print(push_response.json())
-    print(push_response.status_code)
+    # push_response = requests.post(api_url, data=json_output, headers=headers)
+    # print(push_response.json())
+    # print(push_response.status_code)
 
     ## Output: JSON String which mimics AWS Lambda Output
     return json_output
@@ -124,3 +161,10 @@ lambda_handler(json.dumps({"email":"Billy@verkada.com"}))
 lambda_handler(json.dumps({"email":"Brent@verkada.com"}))
 
 ## Put code for Part 2 here
+
+# Get rows
+rows = dbInstance.getRows("leads", {"gender": "female", "topLevelName": "gov"})
+print(rows)
+
+# Update rows for Kyle
+# dbInstance.updateRows("leads", {"name": "Kyle"}, {"age": "26", "nationality": "BA"})
