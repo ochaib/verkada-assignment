@@ -53,18 +53,6 @@ class VerkadaDB():
 
     def getRows(self, tableName, matchingCriteria):
         # Assuming matching criteria is like: {"name": "Jack", "age": 28}
-        
-        # {'leads': 
-        #   {'name': {0: 'John', 1: 'Willy'},
-        #    'email': {0: 'John@acompany.com', 1: 'Willy@bcompany.org'},
-        #    'domain': {0: 'acompany', 1: 'bcompany'},
-        #    'topLevelName': {0: 'com', 1: 'org'},
-        #    'age': {0: 72, 1: 69},
-        #    'gender': {0: 'male', 1: 'male'},
-        #    'nationality': {0: 'IE', 1: 'BE'}
-        #   }
-        # }
-
         unique_indices = self.__getMatchingRowIndices(tableName, matchingCriteria)
         
         rows = []
@@ -83,8 +71,16 @@ class VerkadaDB():
     def updateRows(self, tableName, matchingCriteria, updateInformation):
         # Find row indices according to matching criteria
         unique_indices = self.__getMatchingRowIndices(tableName, matchingCriteria)
+
+        for idx in unique_indices:
+            for k, v in updateInformation.items():
+                if k in self._data[tableName]:
+                    column_values = self._data[tableName][k]
+                    if idx in column_values:
+                        # Update row
+                        self._data[tableName][k][idx] = v
     
-    def deleteRows(self,tableName, matchingCriteria):
+    def deleteRows(self, tableName, matchingCriteria):
         pass
 
 ## Do not edit   
@@ -174,4 +170,4 @@ rows = dbInstance.getRows("leads", {"gender": "female", "topLevelName": "gov"})
 print(rows)
 
 # Update rows for Kyle
-# dbInstance.updateRows("leads", {"name": "Kyle"}, {"age": "26", "nationality": "BA"})
+dbInstance.updateRows("leads", {"name": "Kyle"}, {"age": "26", "nationality": "BA"})
