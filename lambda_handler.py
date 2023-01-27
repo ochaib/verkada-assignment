@@ -69,7 +69,7 @@ class VerkadaDB():
     
     # dbInstance.updateRows("leads", {"name": "Kyle"}, {"age": "26", "nationality": "BA"})
     def updateRows(self, tableName, matchingCriteria, updateInformation):
-        # Find row indices according to matching criteria
+        # Find row indices that match criteria
         unique_indices = self.__getMatchingRowIndices(tableName, matchingCriteria)
 
         for idx in unique_indices:
@@ -77,11 +77,20 @@ class VerkadaDB():
                 if k in self._data[tableName]:
                     column_values = self._data[tableName][k]
                     if idx in column_values:
-                        # Update row
+                        # Update row entry
                         self._data[tableName][k][idx] = v
     
+    # dbInstance.deleteRows("leads", {"name": "Craig"})
     def deleteRows(self, tableName, matchingCriteria):
-        pass
+        # Find row indices that match criteria
+        unique_indices = self.__getMatchingRowIndices(tableName, matchingCriteria)
+        
+        for idx in unique_indices:
+            for k, v in self._data[tableName].items():
+                if idx in v:
+                    # Delete row entry
+                    del self._data[tableName][k][idx]
+
 
 ## Do not edit   
 dbInstance = VerkadaDB()
@@ -169,5 +178,8 @@ lambda_handler(json.dumps({"email":"Brent@verkada.com"}))
 rows = dbInstance.getRows("leads", {"gender": "female", "topLevelName": "gov"})
 print(rows)
 
-# Update rows for Kyle
+# Update rows for Kyles
 dbInstance.updateRows("leads", {"name": "Kyle"}, {"age": "26", "nationality": "BA"})
+
+# Delete rows for Craigs
+dbInstance.deleteRows("leads", {"name": "Craig"})
