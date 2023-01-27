@@ -34,19 +34,7 @@ class VerkadaDB():
         print(self._data)
         self.entry_count[tableName] += 1
 
-    def getRows(self, tableName, matchingCriteria):
-        # Assuming matching criteria is like: {"name": "Jack", "age": 28}
-        
-        # {'leads': 
-        #   {'name': {0: 'John', 1: 'Willy'},
-        #    'email': {0: 'John@acompany.com', 1: 'Willy@bcompany.org'},
-        #    'domain': {0: 'acompany', 1: 'bcompany'},
-        #    'topLevelName': {0: 'com', 1: 'org'},
-        #    'age': {0: 72, 1: 69},
-        #    'gender': {0: 'male', 1: 'male'},
-        #    'nationality': {0: 'IE', 1: 'BE'}
-        #   }
-        # }
+    def __getMatchingRowIndices(self, tableName, matchingCriteria):
         indices_of_potential_matches = []
 
         for criteria_key, critera_value in matchingCriteria.items():
@@ -60,6 +48,24 @@ class VerkadaDB():
         # indices_of_potential_matches where N is len(matchingCriteria)
         unique_indices = list(set(filter(lambda x: indices_of_potential_matches.count(x) == len(matchingCriteria),
                                          indices_of_potential_matches)))
+        
+        return unique_indices
+
+    def getRows(self, tableName, matchingCriteria):
+        # Assuming matching criteria is like: {"name": "Jack", "age": 28}
+        
+        # {'leads': 
+        #   {'name': {0: 'John', 1: 'Willy'},
+        #    'email': {0: 'John@acompany.com', 1: 'Willy@bcompany.org'},
+        #    'domain': {0: 'acompany', 1: 'bcompany'},
+        #    'topLevelName': {0: 'com', 1: 'org'},
+        #    'age': {0: 72, 1: 69},
+        #    'gender': {0: 'male', 1: 'male'},
+        #    'nationality': {0: 'IE', 1: 'BE'}
+        #   }
+        # }
+
+        unique_indices = self.__getMatchingRowIndices(tableName, matchingCriteria)
         
         rows = []
         # Find resulting rows and add them to result
@@ -75,7 +81,8 @@ class VerkadaDB():
     
     # dbInstance.updateRows("leads", {"name": "Kyle"}, {"age": "26", "nationality": "BA"})
     def updateRows(self, tableName, matchingCriteria, updateInformation):
-        pass
+        # Find row indices according to matching criteria
+        unique_indices = self.__getMatchingRowIndices(tableName, matchingCriteria)
     
     def deleteRows(self,tableName, matchingCriteria):
         pass
