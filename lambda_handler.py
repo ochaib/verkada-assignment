@@ -186,9 +186,9 @@ def lambda_handler(json_input):
     headers =  {"Content-Type":"application/json"}
     json_output = json.dumps(results)
     api_url = "https://rwph529xx9.execute-api.us-west-1.amazonaws.com/prod/pushToSlack"
-    # push_response = requests.post(api_url, data=json_output, headers=headers)
-    # print(push_response.json())
-    # print(push_response.status_code)
+    push_response = requests.post(api_url, data=json_output, headers=headers)
+    print(push_response.json())
+    print(push_response.status_code)
 
     ## Output: JSON String which mimics AWS Lambda Output
     return json_output
@@ -200,20 +200,20 @@ dbInstance.addTable("leads")
 lambda_handler(json.dumps({"email":"John@acompany.com"}))
 lambda_handler(json.dumps({"email":"Willy@bcompany.org"}))
 lambda_handler(json.dumps({"email":"Kyle@ccompany.com"}))
-# lambda_handler(json.dumps({"email":"Georgie@dcompany.net"}))
-# lambda_handler(json.dumps({"email":"Karen@eschool.edu"}))
-# lambda_handler(json.dumps({"email":"Annie@usa.gov"}))
-# lambda_handler(json.dumps({"email":"Elvira@fcompay.org"}))
-# lambda_handler(json.dumps({"email":"Juan@gschool.edu"}))
-# lambda_handler(json.dumps({"email":"Julie@hcompany.com"}))
-# lambda_handler(json.dumps({"email":"Pierre@ischool.edu"}))
-# lambda_handler(json.dumps({"email":"Ellen@canada.gov"}))
-# lambda_handler(json.dumps({"email":"Craig@jcompany.org"}))
-# lambda_handler(json.dumps({"email":"Juan@kcompany.net"}))
-# lambda_handler(json.dumps({"email":"Jack@verkada.com"}))
-# lambda_handler(json.dumps({"email":"Jason@verkada.com"}))
-# lambda_handler(json.dumps({"email":"Billy@verkada.com"}))
-# lambda_handler(json.dumps({"email":"Brent@verkada.com"}))
+lambda_handler(json.dumps({"email":"Georgie@dcompany.net"}))
+lambda_handler(json.dumps({"email":"Karen@eschool.edu"}))
+lambda_handler(json.dumps({"email":"Annie@usa.gov"}))
+lambda_handler(json.dumps({"email":"Elvira@fcompay.org"}))
+lambda_handler(json.dumps({"email":"Juan@gschool.edu"}))
+lambda_handler(json.dumps({"email":"Julie@hcompany.com"}))
+lambda_handler(json.dumps({"email":"Pierre@ischool.edu"}))
+lambda_handler(json.dumps({"email":"Ellen@canada.gov"}))
+lambda_handler(json.dumps({"email":"Craig@jcompany.org"}))
+lambda_handler(json.dumps({"email":"Juan@kcompany.net"}))
+lambda_handler(json.dumps({"email":"Jack@verkada.com"}))
+lambda_handler(json.dumps({"email":"Jason@verkada.com"}))
+lambda_handler(json.dumps({"email":"Billy@verkada.com"}))
+lambda_handler(json.dumps({"email":"Brent@verkada.com"}))
 
 ## Put code for Part 2 here
 
@@ -223,14 +223,23 @@ dbInstance.updateRows("leads", {"name": "Kyle"}, {"age": 26, "nationality": "BA"
 # Delete rows for Craigs
 dbInstance.deleteRows("leads", {"name": "Craig"})
 
-# Get rows
-rows = dbInstance.getRows("leads", {"gender": "female", "topLevelName": "gov"})
-print(rows)
-print("HERE")
-# Get rows with comparison operators
+# Testing getRows with comparison operators
 r1 = dbInstance.getRows("leads", {"age": "GT 30"})
 print(r1)
 r2 = dbInstance.getRows("leads", {"age": "LT 60"})
 print(r2)
 r3 = dbInstance.getRows("leads", {"age": "GT 30 LT 70"})
 print(r3)
+
+# Get males over 30
+males_over_30 = dbInstance.getRows("leads", {"age": "GT 29", "gender": "male"})
+print("First four males over 30: ")
+print(males_over_30[:4])
+
+# Send the query result to the Verkada API endpoint
+headers =  {"Content-Type":"application/json"}
+json_output = json.dumps(males_over_30[:4])
+api_url = "https://rwph529xx9.execute-api.us-west-1.amazonaws.com/prod/pushToSlack"
+push_response = requests.post(api_url, data=json_output, headers=headers)
+print(push_response.json())
+print(push_response.status_code)
